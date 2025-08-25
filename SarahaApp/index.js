@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import dbConnection from './database/connection.js';
 import userRoutes from './src/modules/users/user.routes.js';
 import messageRoutes from './src/modules/messages/message.routes.js';
-import globalError from './src/utils/globalError';
+import globalError from './src/utils/globalError.js';
 
 dotenv.config({});
 const app = express();

@@ -4,7 +4,7 @@ import jwt, { decode } from 'jsonwebtoken';
 import sendEmail from '../../email/emailCreator.js';
 import { AppError } from '../../../utils/AppError.js';
 import handleAsyncError from '../../../middleware/handleAsyncError.js';
-export const getAllUsers = handleAsyncError(async (req, res) => {
+export const getAllUsers = handleAsyncError(async (req, res , next) => {
     let users =await userModel.find();
     if (users.length == 0) {
         throw new AppError(404, "No Users Added Yet");
@@ -15,11 +15,11 @@ export const getAllUsers = handleAsyncError(async (req, res) => {
     });
 })
 
-export const register = handleAsyncError(async (req, res) => {
+export const register = handleAsyncError(async (req, res , next) => {
         let { name, email, password } = req.body;
         let user = await userModel.findOne({ email });
         if (user !== null) {
-            throw new AppError(400, "User Already Exists");
+            throw new AppError( "User Already Exists" , 400);
         };
         let hashedPassword = bcrypt.hashSync(password, Number(process.env.HASH_ROUND));
         let addedUser = await userModel.insertOne({ name, email, password: hashedPassword });
@@ -32,15 +32,15 @@ export const register = handleAsyncError(async (req, res) => {
         });
 })
 
-export const login = handleAsyncError(async (req, res) => {
+export const login = handleAsyncError(async (req, res , next) => {
         let { email, password } = req.body;
         let user = await userModel.findOne({ email });
         if (user == null) {
-            throw new AppError(404, "User Not Exists");
+            throw new AppError( "User Not Exists" , 404);
         };
         let matched = bcrypt.compareSync(password, user.password);
         if (!matched) {
-            throw new AppError(400, "Wrong Password");
+            throw new AppError( "Wrong Password" , 400);
         }
         let token = jwt.sign({ id: user._id }, process.env.SECRET_LOGIN);
         return res.json({
@@ -49,7 +49,7 @@ export const login = handleAsyncError(async (req, res) => {
         });
 })
 
-export const updateUser = handleAsyncError(async (req, res) => {
+export const updateUser = handleAsyncError(async (req, res , next) => {
         let { email, password } = req.body;
         let updateData = { email };
         if (password) {
@@ -61,7 +61,7 @@ export const updateUser = handleAsyncError(async (req, res) => {
             { new: true }
         );
         if (user == null) {
-            throw new AppError(404, "User Not Exists");
+            throw new AppError( "User Not Exists" , 404);
         }
         return res.json({
             message: "Update Successfully",
@@ -69,7 +69,7 @@ export const updateUser = handleAsyncError(async (req, res) => {
         });
 });
 
-export const verifyUser = handleAsyncError((req , res)=>{
+export const verifyUser = handleAsyncError((req , res , next)=>{
     let {token} = req.params;
     jwt.verify(token , process.env.SECRET_REGISTER,async (err , decoded)=>{
         let user = await userModel.findOneAndUpdate(
@@ -78,7 +78,7 @@ export const verifyUser = handleAsyncError((req , res)=>{
             { new: true }
         );
         if (user == null) {
-            throw new AppError(404, "User Not Exists or Already Verified");
+            throw new AppError( "User Not Exists or Already Verified" , 404);
         }
         return res.json({
             message: "Update Successfully",
